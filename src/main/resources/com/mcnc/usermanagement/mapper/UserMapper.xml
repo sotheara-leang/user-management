@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mcnc.usermanagement.dao.UserDAO">
+	<resultMap id="userRM" type="User">
+		<id property="id" column="user_id"/>
+		<result property="username" column="user_username" />
+		<result property="password" column="user_password" />
+		<result property="role" column="user_role" />
+		<result property="email" column="user_email" />
+		<result property="allowLoginEmailNotification" column="user_allow_login_email_notification" />
+		<association property="department" column="user_dept_id" resultMap="com.mcnc.usermanagement.dao.DepartmentDAO.departmentRM"></association>
+	</resultMap>
+	
+	<sql id="joinWithDeparment">
+		LEFT OUTER JOIN departments D
+		ON U.user_dept_id=D.dept_id
+	</sql>
+	
+	<select id="findByUsername" resultMap="userRM">
+		SELECT * FROM users 
+		WHERE user_username=#{username}
+	</select>
+	
+	<select id="findUser" resultMap="userRM">
+		SELECT * FROM users 
+		WHERE user_id=#{id}
+	</select>
+	
+	<select id="findUserWithDepartment" resultMap="userRM">
+		SELECT * FROM users U
+		<include refid="joinWithDeparment"></include>
+		WHERE user_id=#{id}
+	</select>
+	
+	<insert id="createUser">
+		INSERT INTO users
+			(user_username, user_password, user_role, user_email, user_allow_login_email_notification, user_dept_id)
+		VALUES 
+			(#{username}, #{password}, #{role}, #{email}, #{allowLoginEmailNotification}, #{department.id})
+	</insert>
+	
+	<update id="updateUser">
+		UPDATE users SET
+			user_username=#{username},
+			user_password=#{password},
+			user_role=#{role},
+			user_email=#{email},
+			user_allow_login_email_notification=#{allowLoginEmailNotification},
+			user_dept_id=#{department.id}
+		WHERE user_id=#{id}
+	</update>
+	
+	<delete id="deleteUser">
+		DELETE FROM users WHERE user_id=#{id}
+	</delete>
+	
+	<select id="searchUsers" resultMap="userRM" >
+		SELECT * FROM users
+		<where>
+			<if test="userQuery.username != null">
+         		user_username=#{userQuery.username}
+    		</if>
+    		<if test="userQuery.role != null">
+         		AND user_role=#{userQuery.role}
+    		</if>
+    		<if test="userQuery.email != null">
+         		AND user_email=#{userQuery.email}
+    		</if>
+		</where>
+		<if test="pageParam.sort != null and pageParam.direction != null">
+			ORDER BY ${pageParam.sort} ${pageParam.direction}
+		</if>
+		LIMIT #{pageParam.size}
+		OFFSET #{pageParam.offset}
+	</select>
+	
+	<select id="countSearchUsers" resultType="Integer">
+		SELECT count(*) FROM users
+		<where>
+			<if test="username != null">
+         		user_username=#{username}
+    		</if>
+    		<if test="role != null">
+         		AND user_role=#{role}
+    		</if>
+    		<if test="email != null">
+         		AND user_email=#{email}
+    		</if>
+		</where>
+	</select>
+</mapper>

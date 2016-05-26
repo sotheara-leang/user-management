@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mcnc.usermanagement.dao.DepartmentDAO">
+	<resultMap id="departmentRM" type="Department">
+		<id property="id" column="dept_id"/>
+		<result property="name" column="dept_name" />
+	</resultMap>
+	
+	<select id="findDepartmentForUser" resultMap="departmentRM">
+		SELECT * FROM departments D
+		INNER JOIN users U
+		ON D.dept_id=U.user_dept_id
+		WHERE U.user_id=#{userId}
+	</select>
+	
+	<select id="findDepartment" resultMap="departmentRM">
+		SELECT * FROM departments 
+		WHERE dept_id=#{id}
+	</select>
+	
+	<select id="findAllDepartments" resultMap="departmentRM">
+		SELECT * FROM departments
+		ORDER BY dept_name
+	</select>
+	
+	<insert id="createDepartment">
+		INSERT INTO departments
+			(dept_name)
+		VALUES 
+			(#{name})
+	</insert>
+	
+	<update id="updateDepartment">
+		UPDATE departments SET
+			dept_name=#{name}
+		WHERE dept_id=#{id}
+	</update>
+	
+	<delete id="deleteDepartment">
+		DELETE FROM departments WHERE dept_id=#{id}
+	</delete>
+	
+	<select id="searchDepartments" resultMap="departmentRM" >
+		SELECT * FROM departments
+		<where>
+			<if test="departmentQuery.name != null">
+         		dept_name=#{departmentQuery.name}
+    		</if>
+		</where>
+		<if test="pageParam.sort != null and pageParam.direction != null">
+			ORDER BY ${pageParam.sort} ${pageParam.direction}
+		</if>
+		LIMIT #{pageParam.size}
+		OFFSET #{pageParam.offset}
+	</select>
+	
+	<select id="countSearchDepartments" resultType="Integer">
+		SELECT count(*) FROM departments
+		<where>
+			<if test="name != null">
+         		dept_name=#{name}
+    		</if>
+		</where>
+	</select>
+</mapper>
